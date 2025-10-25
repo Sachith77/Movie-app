@@ -3,22 +3,91 @@ import Movie from "../models/Movie.js";
 const createMovie = async (req, res) => {
   try {
     const { name, image, year, genre, detail, cast } = req.body;
-    // Logging for debugging
-    console.log('Create Movie Request:', req.body);
-    // Validate required fields
-    if (!name || !image || !year || !genre || !detail || !Array.isArray(cast) || cast.length === 0) {
-      return res.status(400).json({ error: 'Missing required fields' });
+    
+    console.log('=== CREATE MOVIE REQUEST ===');
+    console.log('Request Body:', JSON.stringify(req.body, null, 2));
+    
+    // Comprehensive validation
+    const errors = [];
+    
+    if (!name || typeof name !== 'string' || name.trim() === '') {
+      errors.push('Movie name is required');
     }
-    // Ensure cast is array of strings
-    if (!cast.every(c => typeof c === 'string' && c.trim() !== '')) {
-      return res.status(400).json({ error: 'Cast must be an array of non-empty strings' });
+    
+    if (!image || typeof image !== 'string' || image.trim() === '') {
+      errors.push('Movie image is required');
     }
-    const newMovie = new Movie({ name, image, year, genre, detail, cast });
+    
+    if (!year || !Number.isInteger(Number(year)) || Number(year) < 1800 || Number(year) > new Date().getFullYear() + 5) {
+      errors.push('Valid movie year is required');
+    }
+    
+    if (!genre || typeof genre !== 'string' || genre.trim() === '') {
+      errors.push('Movie genre is required');
+    }
+    
+    if (!detail || typeof detail !== 'string' || detail.trim() === '') {
+      errors.push('Movie detail is required');
+    }
+    
+    if (!Array.isArray(cast) || cast.length === 0) {
+      errors.push('Cast must be a non-empty array');
+    } else {
+      const validCast = cast.every(c => typeof c === 'string' && c.trim() !== '');
+      if (!validCast) {
+        errors.push('All cast members must be non-empty strings');
+      }
+    }
+    
+    if (errors.length > 0) {
+      console.log('Validation Errors:', errors);
+      return res.status(400).json({ 
+        error: 'Validation failed', 
+        details: errors 
+      });
+    }
+    
+    // Clean the data
+    const cleanedCast = cast.map(c => c.trim()).filter(c => c);
+    
+    const movieData = {
+      name: name.trim(),
+      image: image.trim(),
+      year: Number(year),
+      genre: genre.trim(),
+      detail: detail.trim(),
+      cast: cleanedCast
+    };
+    
+    console.log('Creating movie with data:', JSON.stringify(movieData, null, 2));
+    
+    const newMovie = new Movie(movieData);
     const savedMovie = await newMovie.save();
-    res.json(savedMovie);
+    
+    console.log('Movie created successfully:', savedMovie._id);
+    
+    res.status(201).json({
+      success: true,
+      message: 'Movie created successfully',
+      movie: savedMovie
+    });
   } catch (error) {
-    console.error('Create Movie Error:', error);
-    res.status(500).json({ error: error.message });
+    console.error('=== CREATE MOVIE ERROR ===');
+    console.error('Error:', error.message);
+    console.error('Stack:', error.stack);
+    
+    if (error.name === 'ValidationError') {
+      const validationErrors = Object.values(error.errors).map(e => e.message);
+      return res.status(400).json({ 
+        error: 'Validation failed', 
+        details: validationErrors 
+      });
+    }
+    
+    res.status(500).json({ 
+      error: 'Failed to create movie', 
+      message: error.message 
+    });
   }
 };
 
@@ -50,37 +119,107 @@ const updateMovie = async (req, res) => {
     const { id } = req.params;
     const { name, image, year, genre, detail, cast } = req.body;
     
-    // Logging for debugging
-    console.log('Update Movie Request:', { id, body: req.body });
+    console.log('=== UPDATE MOVIE REQUEST ===');
+    console.log('Movie ID:', id);
+    console.log('Request Body:', JSON.stringify(req.body, null, 2));
     
-    // Validate required fields
-    if (!name || !year || !detail) {
-      return res.status(400).json({ error: 'Missing required fields' });
+    // Check if movie exists
+    const existingMovie = await Movie.findById(id);
+    if (!existingMovie) {
+      console.log('Movie not found:', id);
+      return res.status(404).json({ error: 'Movie not found' });
     }
     
-    // Validate cast if provided
-    if (cast && (!Array.isArray(cast) || cast.length === 0)) {
-      return res.status(400).json({ error: 'Cast must be a non-empty array' });
+    // Comprehensive validation
+    const errors = [];
+    
+    if (!name || typeof name !== 'string' || name.trim() === '') {
+      errors.push('Movie name is required');
     }
     
-    if (cast && !cast.every(c => typeof c === 'string' && c.trim() !== '')) {
-      return res.status(400).json({ error: 'Cast must be an array of non-empty strings' });
+    if (!year || !Number.isInteger(Number(year)) || Number(year) < 1800 || Number(year) > new Date().getFullYear() + 5) {
+      errors.push('Valid movie year is required');
     }
+    
+    if (!detail || typeof detail !== 'string' || detail.trim() === '') {
+      errors.push('Movie detail is required');
+    }
+    
+    if (!genre || typeof genre !== 'string' || genre.trim() === '') {
+      errors.push('Movie genre is required');
+    }
+    
+    if (!Array.isArray(cast) || cast.length === 0) {
+      errors.push('Cast must be a non-empty array');
+    } else {
+      const validCast = cast.every(c => typeof c === 'string' && c.trim() !== '');
+      if (!validCast) {
+        errors.push('All cast members must be non-empty strings');
+      }
+    }
+    
+    if (errors.length > 0) {
+      console.log('Validation Errors:', errors);
+      return res.status(400).json({ 
+        error: 'Validation failed', 
+        details: errors 
+      });
+    }
+    
+    // Clean the data
+    const cleanedCast = cast.map(c => c.trim()).filter(c => c);
+    
+    const updateData = {
+      name: name.trim(),
+      year: Number(year),
+      genre: genre.trim(),
+      detail: detail.trim(),
+      cast: cleanedCast
+    };
+    
+    // Only update image if provided
+    if (image && typeof image === 'string' && image.trim() !== '') {
+      updateData.image = image.trim();
+    }
+    
+    console.log('Updating movie with data:', JSON.stringify(updateData, null, 2));
     
     const updatedMovie = await Movie.findByIdAndUpdate(
       id,
-      { name, image, year, genre, detail, cast },
+      updateData,
       { new: true, runValidators: true }
     );
 
-    if (!updatedMovie) {
-      return res.status(404).json({ message: "Movie not found" });
-    }
+    console.log('Movie updated successfully:', updatedMovie._id);
 
-    res.json(updatedMovie);
+    res.json({
+      success: true,
+      message: 'Movie updated successfully',
+      movie: updatedMovie
+    });
   } catch (error) {
-    console.error('Update Movie Error:', error);
-    res.status(500).json({ error: error.message });
+    console.error('=== UPDATE MOVIE ERROR ===');
+    console.error('Error:', error.message);
+    console.error('Stack:', error.stack);
+    
+    if (error.name === 'ValidationError') {
+      const validationErrors = Object.values(error.errors).map(e => e.message);
+      return res.status(400).json({ 
+        error: 'Validation failed', 
+        details: validationErrors 
+      });
+    }
+    
+    if (error.name === 'CastError') {
+      return res.status(400).json({ 
+        error: 'Invalid movie ID format' 
+      });
+    }
+    
+    res.status(500).json({ 
+      error: 'Failed to update movie', 
+      message: error.message 
+    });
   }
 };
 
