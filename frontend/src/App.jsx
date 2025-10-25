@@ -5,13 +5,25 @@ import Navigation from "./pages/Auth/Navigation";
 
 const App = () => {
   return (
-    <>
-      <ToastContainer />
+    <div className="min-h-screen">
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="dark"
+        toastClassName="glass"
+      />
       <Navigation />
-      <main className="py-3">
+      <main className="pt-20">
         <Outlet />
       </main>
-    </>
+    </div>
   );
 };
 
