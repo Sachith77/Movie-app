@@ -48,9 +48,30 @@ const getSpecificMovie = async (req, res) => {
 const updateMovie = async (req, res) => {
   try {
     const { id } = req.params;
-    const updatedMovie = await Movie.findByIdAndUpdate(id, req.body, {
-      new: true,
-    });
+    const { name, image, year, genre, detail, cast } = req.body;
+    
+    // Logging for debugging
+    console.log('Update Movie Request:', { id, body: req.body });
+    
+    // Validate required fields
+    if (!name || !year || !detail) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+    
+    // Validate cast if provided
+    if (cast && (!Array.isArray(cast) || cast.length === 0)) {
+      return res.status(400).json({ error: 'Cast must be a non-empty array' });
+    }
+    
+    if (cast && !cast.every(c => typeof c === 'string' && c.trim() !== '')) {
+      return res.status(400).json({ error: 'Cast must be an array of non-empty strings' });
+    }
+    
+    const updatedMovie = await Movie.findByIdAndUpdate(
+      id,
+      { name, image, year, genre, detail, cast },
+      { new: true, runValidators: true }
+    );
 
     if (!updatedMovie) {
       return res.status(404).json({ message: "Movie not found" });
@@ -58,6 +79,7 @@ const updateMovie = async (req, res) => {
 
     res.json(updatedMovie);
   } catch (error) {
+    console.error('Update Movie Error:', error);
     res.status(500).json({ error: error.message });
   }
 };

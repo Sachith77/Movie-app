@@ -6,6 +6,7 @@ import {
   useUploadImageMutation,
   useDeleteMovieMutation,
 } from "../../redux/api/movies";
+import { useFetchGenresQuery } from "../../redux/api/genre";
 import { toast } from "react-toastify";
 
 const UpdateMovie = () => {
@@ -19,10 +20,12 @@ const UpdateMovie = () => {
     cast: [],
     ratings: 0,
     image: null,
+    genre: "",
   });
 
   const [selectedImage, setSelectedImage] = useState(null);
   const { data: initialMovieData } = useGetSpecificMovieQuery(id);
+  const { data: genres, isLoading: isLoadingGenres } = useFetchGenresQuery();
 
   useEffect(() => {
     if (initialMovieData) {
@@ -42,10 +45,19 @@ const UpdateMovie = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setMovieData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
+    
+    if (name === "genre") {
+      const selectedGenre = genres.find((genre) => genre.name === value);
+      setMovieData((prevData) => ({
+        ...prevData,
+        genre: selectedGenre ? selectedGenre._id : "",
+      }));
+    } else {
+      setMovieData((prevData) => ({
+        ...prevData,
+        [name]: value,
+      }));
+    }
   };
 
   const handleImageChange = (e) => {
@@ -55,13 +67,22 @@ const UpdateMovie = () => {
 
   const handleUpdateMovie = async () => {
     try {
+      // Validate required fields
       if (
-        !movieData.name ||
+        !movieData.name.trim() ||
         !movieData.year ||
-        !movieData.detail ||
-        !movieData.cast
+        !movieData.detail.trim() ||
+        !Array.isArray(movieData.cast) || movieData.cast.length === 0 ||
+        !movieData.genre
       ) {
         toast.error("Please fill in all required fields");
+        return;
+      }
+
+      // Ensure cast is array of non-empty strings
+      const castArray = movieData.cast.map(c => c.trim()).filter(c => c);
+      if (castArray.length === 0) {
+        toast.error("Please enter at least one cast member");
         return;
       }
 
@@ -73,7 +94,7 @@ const UpdateMovie = () => {
 
         const uploadImageResponse = await uploadImage(formData);
 
-        if (uploadImageResponse.data) {
+        if (uploadImageResponse.data && uploadImageResponse.data.image) {
           uploadedImagePath = uploadImageResponse.data.image;
         } else {
           console.error("Failed to upload image:", uploadImageErrorDetails);
@@ -87,12 +108,15 @@ const UpdateMovie = () => {
         updatedMovie: {
           ...movieData,
           image: uploadedImagePath,
+          cast: castArray,
         },
       });
 
-      navigate("/movies");
+      toast.success("Movie updated successfully");
+      navigate("/admin/movies-list");
     } catch (error) {
       console.error("Failed to update movie:", error);
+      toast.error("Failed to update movie");
     }
   };
 
@@ -159,6 +183,28 @@ const UpdateMovie = () => {
               }
               className="border px-2 py-1 w-full"
             />
+          </label>
+        </div>
+
+        <div className="mb-4">
+          <label className="block">
+            Genre:
+            <select
+              name="genre"
+              value={genres?.find((g) => g._id === movieData.genre)?.name || ""}
+              onChange={handleChange}
+              className="border px-2 py-1 w-full"
+            >
+              {isLoadingGenres ? (
+                <option>Loading genres...</option>
+              ) : (
+                genres?.map((genre) => (
+                  <option key={genre._id} value={genre.name}>
+                    {genre.name}
+                  </option>
+                ))
+              )}
+            </select>
           </label>
         </div>
 
