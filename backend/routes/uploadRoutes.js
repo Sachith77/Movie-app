@@ -1,12 +1,22 @@
 import path from "path";
 import express from "express";
 import multer from "multer";
+import fs from "fs";
 
 const router = express.Router();
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "uploads/");
+    try {
+      const __dirname = path.resolve();
+      const uploadDir = path.join(__dirname, "uploads");
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+      cb(null, uploadDir);
+    } catch (err) {
+      cb(err, undefined);
+    }
   },
 
   filename: (req, file, cb) => {
@@ -16,16 +26,16 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
-  const filetypes = /jpe?g|png|webp/;
-  const mimetypes = /image\/jpe?g|image\/png||image\/webp/;
+  const filetypes = /jpe?g|png|webp/i;
+  const mimetypes = /image\/jpe?g|image\/png|image\/webp/i;
 
-  const extname = path.extname(file.originalname);
-  const mimetype = file.mimetype;
+  const extname = path.extname(file.originalname).toLowerCase();
+  const mimetype = (file.mimetype || "").toLowerCase();
 
   if (filetypes.test(extname) && mimetypes.test(mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error("Images only"), false);
+    cb(new Error("Images only (jpeg, jpg, png, webp)"), false);
   }
 };
 
@@ -37,9 +47,10 @@ router.post("/", (req, res) => {
     if (err) {
       res.status(400).send({ message: err.message });
     } else if (req.file) {
+      const baseUrl = `${req.protocol}://${req.get("host")}`;
       res.status(200).send({
         message: "Image uploaded successfully",
-        image: `/${req.file.path}`,
+        image: `${baseUrl}/uploads/${path.basename(req.file.path)}`,
       });
     } else {
       res.status(400).send({ message: "No image file provided" });
