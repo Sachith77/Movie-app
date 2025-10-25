@@ -177,12 +177,16 @@ const updateMovie = async (req, res) => {
       cast: cleanedCast
     };
     
-    // Only update image if provided
+    // Always update image if provided (even if same URL)
     if (image && typeof image === 'string' && image.trim() !== '') {
       updateData.image = image.trim();
+      console.log('Image will be updated to:', updateData.image);
+    } else {
+      console.log('No image provided, keeping existing image');
     }
     
     console.log('Updating movie with data:', JSON.stringify(updateData, null, 2));
+    console.log('Existing movie image:', existingMovie.image);
     
     const updatedMovie = await Movie.findByIdAndUpdate(
       id,
@@ -190,7 +194,7 @@ const updateMovie = async (req, res) => {
       { new: true, runValidators: true }
     );
 
-    console.log('Movie updated successfully:', updatedMovie._id);
+    console.log('Movie updated successfully. New image:', updatedMovie.image);
 
     res.json({
       success: true,

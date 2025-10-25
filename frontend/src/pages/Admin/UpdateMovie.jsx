@@ -136,6 +136,7 @@ const UpdateMovie = () => {
       // Step 1: Upload new image if selected
       if (selectedImage) {
         console.log('Uploading new image...');
+        console.log('Current image URL:', movieData.image);
         const formData = new FormData();
         formData.append("image", selectedImage);
 
@@ -148,6 +149,10 @@ const UpdateMovie = () => {
 
         uploadedImagePath = uploadImageResponse.image;
         console.log('New image uploaded successfully:', uploadedImagePath);
+        console.log('Old image was:', movieData.image);
+        console.log('Image changed:', movieData.image !== uploadedImagePath);
+      } else {
+        console.log('No new image selected, using existing:', uploadedImagePath);
       }
 
       // Step 2: Prepare movie data
@@ -166,6 +171,7 @@ const UpdateMovie = () => {
       };
 
       console.log('Updating movie with payload:', moviePayload);
+      console.log('Image in payload:', moviePayload.image);
 
       // Step 3: Update movie
       const updateResponse = await updateMovie({
@@ -177,10 +183,30 @@ const UpdateMovie = () => {
 
       toast.success("Movie updated successfully!");
       
-      // Navigate to movies list
+      // Update local state with the response data
+      if (updateResponse.movie) {
+        const castString = Array.isArray(updateResponse.movie.cast) 
+          ? updateResponse.movie.cast.join(', ') 
+          : '';
+        
+        setMovieData({
+          name: updateResponse.movie.name || "",
+          year: updateResponse.movie.year || new Date().getFullYear(),
+          detail: updateResponse.movie.detail || "",
+          cast: castString,
+          genre: updateResponse.movie.genre?._id || updateResponse.movie.genre || "",
+          image: updateResponse.movie.image || "",
+        });
+        
+        setImagePreview(updateResponse.movie.image || null);
+        setSelectedImage(null);
+        console.log('Local state updated with new movie data:', updateResponse.movie);
+      }
+      
+      // Navigate to movies list after a short delay
       setTimeout(() => {
         navigate("/admin/movies-list");
-      }, 1000);
+      }, 1500);
 
     } catch (error) {
       console.error('=== UPDATE MOVIE ERROR ===');
