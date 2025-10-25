@@ -2,10 +2,22 @@ import Movie from "../models/Movie.js";
 
 const createMovie = async (req, res) => {
   try {
-    const newMovie = new Movie(req.body);
+    const { name, image, year, genre, detail, cast } = req.body;
+    // Logging for debugging
+    console.log('Create Movie Request:', req.body);
+    // Validate required fields
+    if (!name || !image || !year || !genre || !detail || !Array.isArray(cast) || cast.length === 0) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+    // Ensure cast is array of strings
+    if (!cast.every(c => typeof c === 'string' && c.trim() !== '')) {
+      return res.status(400).json({ error: 'Cast must be an array of non-empty strings' });
+    }
+    const newMovie = new Movie({ name, image, year, genre, detail, cast });
     const savedMovie = await newMovie.save();
     res.json(savedMovie);
   } catch (error) {
+    console.error('Create Movie Error:', error);
     res.status(500).json({ error: error.message });
   }
 };

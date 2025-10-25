@@ -69,50 +69,51 @@ const CreateMovie = () => {
 
   const handleCreateMovie = async () => {
     try {
+      // Validate required fields
       if (
-        !movieData.name ||
+        !movieData.name.trim() ||
         !movieData.year ||
-        !movieData.detail ||
-        !movieData.cast ||
-        !selectedImage
+        !movieData.detail.trim() ||
+        !Array.isArray(movieData.cast) || movieData.cast.length === 0 ||
+        !selectedImage ||
+        !movieData.genre
       ) {
         toast.error("Please fill all required fields");
         return;
       }
-
+      // Ensure cast is array of non-empty strings
+      const castArray = movieData.cast.map(c => c.trim()).filter(c => c);
+      if (castArray.length === 0) {
+        toast.error("Please enter at least one cast member");
+        return;
+      }
       let uploadedImagePath = null;
-
       if (selectedImage) {
         const formData = new FormData();
         formData.append("image", selectedImage);
-
         const uploadImageResponse = await uploadImage(formData);
-
-        if (uploadImageResponse.data) {
+        if (uploadImageResponse.data && uploadImageResponse.data.image) {
           uploadedImagePath = uploadImageResponse.data.image;
         } else {
           console.error("Failed to upload image: ", uploadImageErrorDetails);
           toast.error("Failed to upload image");
           return;
         }
-
         await createMovie({
           ...movieData,
           image: uploadedImagePath,
+          cast: castArray,
         });
-
         navigate("/admin/movies-list");
-
         setMovieData({
           name: "",
           year: 0,
           detail: "",
           cast: [],
-          ratings: 0,
+          rating: 0,
           image: null,
           genre: "",
         });
-
         toast.success("Movie Added To Database");
       }
     } catch (error) {
