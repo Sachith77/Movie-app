@@ -69,13 +69,20 @@ Before running this project, make sure you have the following installed:
 
 3. **Environment Setup**
    
-   Create a `.env` file in the root directory:
+   **Backend Environment (.env in root directory):**
    ```env
    PORT=3000
    MONGO_URI=your_mongodb_connection_string
    JWT_SECRET=your_jwt_secret_key
    NODE_ENV=development
    ```
+
+   **Frontend Environment (.env in frontend directory):**
+   ```env
+   VITE_API_URL=http://localhost:3000
+   ```
+   
+   > **Note**: For production, update `VITE_API_URL` to your deployed backend URL.
 
 4. **Start MongoDB**
    
@@ -219,6 +226,186 @@ MERN-Movies-App/
 - Admin-only routes with middleware protection
 - Cookie-based token storage
 - Input validation and sanitization
+
+## 🌐 Deployment Guide
+
+### Prerequisites
+- GitHub account with your code pushed
+- MongoDB Atlas account (for cloud database)
+- Render account (for backend)
+- Vercel account (for frontend)
+
+### Step 1: Setup MongoDB Atlas
+
+1. Go to [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)
+2. Create a free cluster
+3. Click "Connect" → "Connect your application"
+4. Copy the connection string (it looks like: `mongodb+srv://username:<password>@cluster.mongodb.net/`)
+5. Replace `<password>` with your actual password
+6. Add `/moviedb` at the end: `mongodb+srv://username:password@cluster.mongodb.net/moviedb`
+7. In "Network Access", add `0.0.0.0/0` to allow connections from anywhere
+
+### Step 2: Deploy Backend on Render
+
+1. **Go to [Render](https://render.com) and sign in**
+
+2. **Click "New +" → "Web Service"**
+
+3. **Connect your GitHub repository**
+
+4. **Configure the service:**
+   - **Name**: `movie-app-backend` (or any name you prefer)
+   - **Region**: Choose closest to you
+   - **Branch**: `main`
+   - **Root Directory**: Leave empty (or use `.` if it doesn't work)
+   - **Runtime**: `Node`
+   - **Build Command**: `npm install`
+   - **Start Command**: `node backend/index.js`
+
+5. **Add Environment Variables** (click "Advanced" → "Add Environment Variable"):
+   ```
+   PORT=3000
+   MONGO_URI=mongodb+srv://username:password@cluster.mongodb.net/moviedb
+   JWT_SECRET=your_super_secret_jwt_key_here_make_it_long_and_random
+   NODE_ENV=production
+   ```
+   
+   > **Important**: Generate a strong JWT_SECRET (you can use: `openssl rand -base64 32`)
+
+6. **Click "Create Web Service"**
+
+7. **Wait for deployment** (5-10 minutes)
+
+8. **Copy your backend URL** (it will be something like: `https://movie-app-backend.onrender.com`)
+
+### Step 3: Deploy Frontend on Vercel
+
+1. **Update your local frontend `.env` file** with the Render backend URL:
+   ```env
+   VITE_API_URL=https://your-backend-url.onrender.com
+   ```
+
+2. **Create a production environment file** in `frontend/.env.production`:
+   ```env
+   VITE_API_URL=https://your-backend-url.onrender.com
+   ```
+
+3. **Go to [Vercel](https://vercel.com) and sign in**
+
+4. **Click "Add New..." → "Project"**
+
+5. **Import your GitHub repository**
+
+6. **Configure the project:**
+   - **Framework Preset**: Vite
+   - **Root Directory**: `frontend`
+   - **Build Command**: `npm run build`
+   - **Output Directory**: `dist`
+   - **Install Command**: `npm install`
+
+7. **Add Environment Variable**:
+   - Go to "Environment Variables" section
+   - Add: `VITE_API_URL` = `https://your-backend-url.onrender.com`
+   - Make sure it's available for Production, Preview, and Development
+
+8. **Click "Deploy"**
+
+9. **Wait for deployment** (2-5 minutes)
+
+10. **Your app is live!** Vercel will give you a URL like: `https://your-app.vercel.app`
+
+### Step 4: Update Backend CORS (Important!)
+
+After deploying frontend, you need to update your backend to allow CORS from your Vercel domain.
+
+1. **In your backend `index.js`**, add CORS configuration:
+   ```javascript
+   import cors from "cors";
+   
+   // Add after creating the app
+   app.use(cors({
+     origin: ["https://your-app.vercel.app", "http://localhost:5173"],
+     credentials: true
+   }));
+   ```
+
+2. **Install CORS** (if not already):
+   ```bash
+   npm install cors
+   ```
+
+3. **Add CORS to your backend `package.json` dependencies** and push to GitHub
+
+4. **Render will automatically redeploy** when you push changes
+
+### Environment Variables Summary
+
+**Backend (Render):**
+```env
+PORT=3000
+MONGO_URI=mongodb+srv://username:password@cluster.mongodb.net/moviedb
+JWT_SECRET=your_super_secret_jwt_key
+NODE_ENV=production
+```
+
+**Frontend (Vercel):**
+```env
+VITE_API_URL=https://your-backend-url.onrender.com
+```
+
+### Important Notes
+
+⚠️ **Render Free Tier**: 
+- Your backend will spin down after 15 minutes of inactivity
+- First request after spin-down may take 30-60 seconds
+- Consider upgrading to paid tier for production apps
+
+⚠️ **Cookie Issues**:
+- If authentication doesn't work, check CORS settings
+- Ensure `credentials: true` is set in CORS
+- Frontend must send requests with `credentials: 'include'`
+
+⚠️ **Build Errors**:
+- Make sure all dependencies are in `package.json`
+- Check build logs for specific errors
+- Verify Node version compatibility
+
+### Troubleshooting
+
+**Backend won't start?**
+- Check Render logs for errors
+- Verify MongoDB connection string
+- Ensure all environment variables are set
+
+**Frontend can't connect to backend?**
+- Verify `VITE_API_URL` is correct
+- Check browser console for CORS errors
+- Ensure backend is running (visit backend URL directly)
+
+**Authentication issues?**
+- Check CORS configuration
+- Verify JWT_SECRET is set on backend
+- Clear browser cookies and try again
+
+### Testing Your Deployment
+
+1. **Test backend**: Visit `https://your-backend-url.onrender.com/api/v1/movies`
+2. **Test frontend**: Visit `https://your-app.vercel.app`
+3. **Test registration**: Create a new user account
+4. **Test login**: Login with the created account
+5. **Test movies**: Browse and interact with movies
+
+### Updating Your Deployment
+
+**Backend updates:**
+- Push changes to GitHub
+- Render will automatically redeploy
+
+**Frontend updates:**
+- Push changes to GitHub  
+- Vercel will automatically redeploy
+
+🎉 **Congratulations! Your MERN Movies App is now live!**
 
 ## 🤝 Contributing
 
