@@ -211,6 +211,17 @@ const UpdateMovie = () => {
     } catch (error) {
       console.error('=== UPDATE MOVIE ERROR ===');
       console.error('Error:', error);
+      console.error('Error data:', error?.data);
+      console.error('Error status:', error?.status);
+      
+      // Check if it's an authentication error
+      if (error?.status === 401 || error?.data?.message?.includes('Not authorized')) {
+        toast.error('Session expired. Please log in again.');
+        setTimeout(() => {
+          navigate('/login');
+        }, 2000);
+        return;
+      }
       
       const errorMessage = error?.data?.error || error?.data?.message || error?.message || 'Failed to update movie';
       const errorDetails = error?.data?.details;
