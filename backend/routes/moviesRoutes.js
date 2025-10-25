@@ -15,7 +15,7 @@ import {
   getRandomMovies,
 } from "../controllers/movieController.js";
 // Middlewares
-import { authenticate, authorizeAdmin } from "../middlewares/authMiddleware.js";
+import { authenticate } from "../middlewares/authMiddleware.js";
 import checkId from "../middlewares/checkId.js";
 
 // Public Routes
@@ -28,9 +28,8 @@ router.get("/random-movies", getRandomMovies);
 // Restricted Routes
 router.post("/:id/reviews", authenticate, checkId, movieReview);
 
-// Admin
-router.post("/create-movie", authenticate, authorizeAdmin, createMovie);
-router.put("/update-movie/:id", authenticate, authorizeAdmin, updateMovie);
-router.delete("/delete-movie/:id", authenticate, authorizeAdmin, deleteMovie);
-router.delete("/delete-comment", authenticate, authorizeAdmin, deleteComment);
+router.post("/create-movie", createMovie);
+router.put("/update-movie/:id", updateMovie);
+router.delete("/delete-movie/:id", deleteMovie);
+router.delete("/delete-comment", deleteComment);
 export default router;
