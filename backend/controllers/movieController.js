@@ -248,18 +248,19 @@ const movieReview = async (req, res) => {
     const movie = await Movie.findById(req.params.id);
 
     if (movie) {
-      const alreadyReviewed = movie.reviews.find(
-        (r) => r.user.toString() === req.user._id.toString()
-      );
+      // Remove the duplicate review check - allow multiple reviews
+      // const alreadyReviewed = movie.reviews.find(
+      //   (r) => r.user.toString() === req.user._id.toString()
+      // );
 
-      if (alreadyReviewed) {
-        res.status(400);
-        throw new Error("Movie already reviewed");
-      }
+      // if (alreadyReviewed) {
+      //   res.status(400);
+      //   throw new Error("Movie already reviewed");
+      // }
 
       const review = {
         name: req.user.username,
-        rating: Number(rating),
+        rating: Number(rating) || 5, // Default to 5 if rating not provided
         comment,
         user: req.user._id,
       };
