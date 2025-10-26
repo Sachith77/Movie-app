@@ -245,41 +245,44 @@ const updateMovie = async (req, res) => {
 const movieReview = async (req, res) => {
   try {
     const { rating, comment } = req.body;
+    
+    // Simple validation
+    if (!comment || comment.trim() === "") {
+      return res.status(400).json({ message: "Comment is required" });
+    }
+
     const movie = await Movie.findById(req.params.id);
 
-    if (movie) {
-      // Remove the duplicate review check - allow multiple reviews
-      // const alreadyReviewed = movie.reviews.find(
-      //   (r) => r.user.toString() === req.user._id.toString()
-      // );
-
-      // if (alreadyReviewed) {
-      //   res.status(400);
-      //   throw new Error("Movie already reviewed");
-      // }
-
-      const review = {
-        name: req.user.username,
-        rating: Number(rating) || 5, // Default to 5 if rating not provided
-        comment,
-        user: req.user._id,
-      };
-
-      movie.reviews.push(review);
-      movie.numReviews = movie.reviews.length;
-      movie.rating =
-        movie.reviews.reduce((acc, item) => item.rating + acc, 0) /
-        movie.reviews.length;
-
-      await movie.save();
-      res.status(201).json({ message: "Review Added" });
-    } else {
-      res.status(404);
-      throw new Error("Movie not found");
+    if (!movie) {
+      return res.status(404).json({ message: "Movie not found" });
     }
+
+    // Create review object - simple and direct
+    const review = {
+      name: req.user.username,
+      rating: rating ? Number(rating) : 5,
+      comment: comment.trim(),
+      user: req.user._id,
+    };
+
+    // Add review
+    movie.reviews.push(review);
+    movie.numReviews = movie.reviews.length;
+    
+    // Calculate average rating
+    const totalRating = movie.reviews.reduce((sum, item) => sum + item.rating, 0);
+    movie.rating = totalRating / movie.reviews.length;
+
+    // Save
+    await movie.save();
+    
+    res.status(201).json({ 
+      message: "Review added successfully",
+      review: review
+    });
   } catch (error) {
-    console.error(error);
-    res.status(400).json(error.message);
+    console.error("Review submission error:", error);
+    res.status(500).json({ message: "Failed to add review. Please try again." });
   }
 };
 

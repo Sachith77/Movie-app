@@ -20,22 +20,25 @@ const MovieDetails = () => {
   const submitHandler = async (e) => {
     e.preventDefault();
 
+      if (!comment.trim()) {
+        toast.error("Please enter a comment");
+        return;
+      }
+
     try {
       await createReview({
         id: movieId,
-        rating: rating || 5, // Default to 5 if not set
-        comment,
+          rating: 5,
+          comment: comment.trim(),
       }).unwrap();
 
+        setComment("");
       refetch();
-      
-      // Reset form
-      setComment("");
-      setRating(0);
 
-      toast.success("Review created successfully");
+        toast.success("Review submitted successfully!");
     } catch (error) {
-      toast.error(error.data || error.message);
+        console.error("Review error:", error);
+        toast.error(error?.data?.message || "Failed to submit review");
     }
   };
 
@@ -156,14 +159,12 @@ const MovieDetails = () => {
           {/* Reviews Section */}
           <div className="pb-12">
             <MovieTabs
-              loadingMovieReview={loadingMovieReview}
               userInfo={userInfo}
               submitHandler={submitHandler}
-              rating={rating}
-              setRating={setRating}
               comment={comment}
               setComment={setComment}
               movie={movie}
+            isLoading={loadingMovieReview}
             />
           </div>
         </div>
