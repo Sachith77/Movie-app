@@ -4,6 +4,12 @@ import { getUserFromRequest } from '@/lib/auth';
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const method = request.method.toUpperCase();
+
+  // Let preflight requests pass through so CORS checks succeed
+  if (method === 'OPTIONS') {
+    return NextResponse.next();
+  }
 
   // Protect admin routes
   if (pathname.startsWith('/api/admin')) {
@@ -27,7 +33,7 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  if (pathname.startsWith('/api/reviews') && request.method !== 'GET') {
+  if (pathname.startsWith('/api/reviews') && method !== 'GET') {
     const user = getUserFromRequest(request);
     if (!user) {
       return NextResponse.json(
