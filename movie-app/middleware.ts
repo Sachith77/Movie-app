@@ -17,7 +17,17 @@ export function middleware(request: NextRequest) {
   }
 
   // Protect user routes that require authentication
-  if (pathname.startsWith('/api/user') || pathname.startsWith('/api/reviews')) {
+  if (pathname.startsWith('/api/user')) {
+    const user = getUserFromRequest(request);
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+  }
+
+  if (pathname.startsWith('/api/reviews') && request.method !== 'GET') {
     const user = getUserFromRequest(request);
     if (!user) {
       return NextResponse.json(

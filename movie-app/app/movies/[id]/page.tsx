@@ -84,6 +84,12 @@ export default function MovieDetails() {
 
     try {
       const token = localStorage.getItem('token');
+      if (!token) {
+        const message = 'Please log in again to submit a review';
+        toast.error(message);
+        dispatch(createReviewFailure(message));
+        return;
+      }
       const response = await fetch('/api/reviews', {
         method: 'POST',
         headers: {
@@ -108,11 +114,15 @@ export default function MovieDetails() {
         setShowReviewForm(false);
         toast.success('Review submitted successfully!');
       } else {
-        dispatch(createReviewFailure(data.error));
+        const message = data.error || 'Failed to submit review';
+        dispatch(createReviewFailure(message));
+        toast.error(message);
       }
     } catch (err) {
       console.error('Create review error:', err);
-      dispatch(createReviewFailure('Failed to submit review'));
+      const message = 'Failed to submit review';
+      dispatch(createReviewFailure(message));
+      toast.error(message);
     }
   };
 
