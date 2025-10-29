@@ -18,7 +18,6 @@ export async function GET(request: NextRequest) {
     }
 
     const reviews = await Review.find({ movie: movieId })
-      .populate('user', 'name')
       .sort({ createdAt: -1 });
 
     return NextResponse.json(reviews);
@@ -35,19 +34,11 @@ export async function POST(request: NextRequest) {
   try {
     await dbConnect();
 
-    const user = getUserFromRequest(request);
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+    const { movieId, rating, comment, userName } = await request.json();
 
-    const { movieId, rating, comment } = await request.json();
-
-    if (!movieId || !rating || !comment) {
+    if (!movieId || !rating || !comment || !userName) {
       return NextResponse.json(
-        { error: 'Movie ID, rating, and comment are required' },
+        { error: 'Movie ID, rating, comment, and user name are required' },
         { status: 400 }
       );
     }
@@ -59,27 +50,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if user already reviewed this movie
-    const existingReview = await Review.findOne({
-      movie: movieId,
-      user: user.userId,
-    });
-
-    if (existingReview) {
-      return NextResponse.json(
-        { error: 'You have already reviewed this movie' },
-        { status: 400 }
-      );
-    }
-
+    // Create a temporary user object for the review
     const review = await Review.create({
       movie: movieId,
-      user: user.userId,
+      user: userName,
       rating,
       comment,
     });
-
-    await review.populate('user', 'name');
 
     return NextResponse.json(review, { status: 201 });
   } catch (error) {

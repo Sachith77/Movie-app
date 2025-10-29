@@ -33,19 +33,9 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  if (pathname.startsWith('/api/reviews') && method !== 'GET') {
-    const user = getUserFromRequest(request);
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-  }
-
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/api/admin/:path*', '/api/user/:path*', '/api/reviews/:path*'],
+  matcher: ['/api/admin/:path*', '/api/user/:path*'],
 };

@@ -1,15 +1,9 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
-interface User {
-  _id: string;
-  name: string;
-  email?: string;
-}
-
 interface Review {
   _id: string;
   movie: string;
-  user: User;
+  user: string;
   rating: number;
   comment: string;
   createdAt: string;

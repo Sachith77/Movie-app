@@ -24,7 +24,7 @@ export interface User {
 export interface Review {
   _id: string;
   movie: string;
-  user: User;
+  user: string;
   rating: number;
   comment: string;
   createdAt: string;

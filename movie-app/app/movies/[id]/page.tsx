@@ -24,6 +24,7 @@ export default function MovieDetails() {
 
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
+  const [userName, setUserName] = useState('');
   const [showReviewForm, setShowReviewForm] = useState(false);
 
   useEffect(() => {
@@ -70,8 +71,8 @@ export default function MovieDetails() {
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!user) {
-      toast.error('Please login to submit a review');
+    if (!userName.trim()) {
+      toast.error('Please enter your name');
       return;
     }
 
@@ -83,20 +84,12 @@ export default function MovieDetails() {
     dispatch(createReviewStart());
 
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        const message = 'Please log in again to submit a review';
-        toast.error(message);
-        dispatch(createReviewFailure(message));
-        return;
-      }
       const response = await fetch('/api/reviews', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({ movieId, rating, comment }),
+        body: JSON.stringify({ movieId, rating, comment, userName: userName.trim() }),
       });
 
       const data = await response.json();
@@ -110,6 +103,7 @@ export default function MovieDetails() {
           }));
         }
         setComment('');
+        setUserName('');
         setRating(5);
         setShowReviewForm(false);
         toast.success('Review submitted successfully!');
@@ -257,21 +251,12 @@ export default function MovieDetails() {
               <h2 className="text-2xl font-semibold text-white">Reviews</h2>
               <p className="text-sm text-slate-400">Hear what the community is saying about this title.</p>
             </div>
-            {user ? (
-              <button
-                onClick={() => setShowReviewForm(!showReviewForm)}
-                className="inline-flex items-center justify-center rounded-full bg-blue-600 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-blue-600/30 transition hover:-translate-y-0.5 hover:bg-blue-500"
-              >
-                {showReviewForm ? 'Cancel' : 'Write a review'}
-              </button>
-            ) : (
-              <Link
-                href="/login"
-                className="inline-flex items-center justify-center rounded-full border border-white/15 px-5 py-2 text-sm font-semibold text-slate-200 transition hover:border-white/40 hover:text-white"
-              >
-                Login to review
-              </Link>
-            )}
+            <button
+              onClick={() => setShowReviewForm(!showReviewForm)}
+              className="inline-flex items-center justify-center rounded-full bg-blue-600 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-blue-600/30 transition hover:-translate-y-0.5 hover:bg-blue-500"
+            >
+              {showReviewForm ? 'Cancel' : 'Write a review'}
+            </button>
           </div>
 
           {showReviewForm && (
@@ -279,6 +264,18 @@ export default function MovieDetails() {
               onSubmit={handleSubmitReview}
               className="mb-10 grid gap-6 rounded-2xl border border-white/10 bg-slate-900/60 p-6 shadow-inner"
             >
+              <div className="grid gap-2">
+                <label className="text-sm font-medium text-slate-200">Your Name</label>
+                <input
+                  type="text"
+                  value={userName}
+                  onChange={(e) => setUserName(e.target.value)}
+                  className="w-full rounded-xl border border-white/10 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-400 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400/40"
+                  placeholder="Enter your name..."
+                  required
+                />
+              </div>
+
               <div className="grid gap-2 sm:grid-cols-[160px_1fr] sm:items-center">
                 <label className="text-sm font-medium text-slate-200">Rating</label>
                 <select
@@ -333,7 +330,7 @@ export default function MovieDetails() {
                 >
                   <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <span className="text-sm font-semibold text-white">{review.user.name}</span>
+                      <span className="text-sm font-semibold text-white">{review.user}</span>
                       <div className="flex items-center gap-1">
                         {[...Array(5)].map((_, i) => (
                           <span
