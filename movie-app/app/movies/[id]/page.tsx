@@ -138,76 +138,126 @@ export default function MovieDetails() {
     );
   }
 
+  const topCast = currentMovie.cast.slice(0, 3);
+  const reviewCount = currentMovie.reviewsCount || 0;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 text-slate-100">
       <Header />
 
-      <main className="container mx-auto px-4 py-8">
-        <div className="glass rounded-lg overflow-hidden mb-8">
-          <div className="md:flex">
-            <div className="md:w-1/3">
-              <div className="relative h-96 md:h-full">
+      <main className="mx-auto w-full max-w-6xl px-4 py-12 lg:px-8 lg:py-16">
+        <div className="mb-8">
+          <Link
+            href="/movies"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-slate-300 transition hover:text-white"
+          >
+            <span aria-hidden="true">&larr;</span>
+            Back to catalogue
+          </Link>
+        </div>
+
+        <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-slate-950/70 shadow-2xl">
+          <div className="pointer-events-none absolute inset-0">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-transparent to-purple-500/10" />
+            <div className="absolute -left-24 top-1/2 hidden h-72 w-72 -translate-y-1/2 rounded-full bg-blue-400/20 blur-3xl md:block" />
+          </div>
+
+          <div className="relative z-10 grid gap-10 px-6 py-10 lg:grid-cols-[320px_1fr] lg:px-12 lg:py-14">
+            <div className="flex justify-center lg:justify-start">
+              <div className="relative aspect-[2/3] w-full max-w-[320px] overflow-hidden rounded-3xl border border-white/15 bg-slate-900/60 shadow-2xl shadow-blue-600/30">
                 <Image
-                  src={currentMovie.poster || '/placeholder-movie.jpg'}
+                  src={currentMovie.poster || '/placeholder-movie.svg'}
                   alt={currentMovie.title}
                   fill
-                  className="object-cover"
-                  sizes="(max-width: 768px) 100vw, 33vw"
+                  className="object-cover object-top"
+                  sizes="(max-width: 1024px) 60vw, 320px"
+                  priority
                 />
+                <span className="absolute left-4 top-4 rounded-full bg-blue-600/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-white shadow-lg shadow-blue-600/40">
+                  {currentMovie.year}
+                </span>
               </div>
             </div>
-            <div className="md:w-2/3 p-8">
-              <h1 className="text-4xl font-bold mb-4">{currentMovie.title}</h1>
-              <p className="text-xl text-gray-600 mb-4">{currentMovie.year}</p>
 
-              <div className="flex flex-wrap gap-2 mb-6">
-                {currentMovie.genres.map((genre: Genre) => (
-                  <span
-                    key={genre._id}
-                    className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
-                  >
-                    {genre.name}
-                  </span>
-                ))}
-              </div>
+            <div className="flex flex-col gap-10">
+              <div className="space-y-6">
+                <div className="space-y-3">
+                  <h1 className="text-4xl font-bold leading-tight text-white sm:text-5xl">
+                    {currentMovie.title}
+                  </h1>
+                  <p className="text-base leading-relaxed text-slate-200/80 sm:text-lg">
+                    {currentMovie.description}
+                  </p>
+                </div>
 
-              <h2 className="text-2xl font-semibold mb-4">Synopsis</h2>
-              <p className="text-gray-700 mb-6 leading-relaxed">{currentMovie.description}</p>
+                <div className="flex flex-wrap gap-2">
+                  {currentMovie.genres.map((genre: Genre) => (
+                    <span
+                      key={genre._id}
+                      className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-blue-100"
+                    >
+                      {genre.name}
+                    </span>
+                  ))}
+                </div>
 
-              <h2 className="text-2xl font-semibold mb-4">Cast</h2>
-              <div className="flex flex-wrap gap-2">
-                {currentMovie.cast.map((actor: string, index: number) => (
-                  <span
-                    key={index}
-                    className="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm"
-                  >
-                    {actor}
-                  </span>
-                ))}
-              </div>
+                <div className="grid gap-4 text-sm text-slate-200 sm:grid-cols-3">
+                  <div className="rounded-2xl border border-white/10 bg-white/5 p-4 shadow-lg shadow-blue-500/10">
+                    <p className="text-xs uppercase tracking-[0.25em] text-slate-300/70">Reviews</p>
+                    <p className="mt-2 text-2xl font-semibold text-white">{reviewCount}</p>
+                    <p className="text-xs text-slate-400">Community reactions</p>
+                  </div>
+                  <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                    <p className="text-xs uppercase tracking-[0.25em] text-slate-300/70">Release</p>
+                    <p className="mt-2 text-2xl font-semibold text-white">{currentMovie.year}</p>
+                    <p className="text-xs text-slate-400">Year of premiere</p>
+                  </div>
+                  <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                    <p className="text-xs uppercase tracking-[0.25em] text-slate-300/70">Top billed</p>
+                    <p className="mt-2 text-base font-semibold text-white">
+                      {topCast.length ? topCast.join(', ') : 'Cast TBA'}
+                    </p>
+                    <p className="text-xs text-slate-400">Featured performers</p>
+                  </div>
+                </div>
 
-              <div className="mt-6 text-lg">
-                <span className="font-semibold">{currentMovie.reviewsCount || 0}</span> reviews
+                <div className="space-y-3">
+                  <h2 className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-300">
+                    Full cast
+                  </h2>
+                  <div className="flex flex-wrap gap-2">
+                    {currentMovie.cast.map((actor: string, index: number) => (
+                      <span
+                        key={index}
+                        className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs font-medium text-slate-100"
+                      >
+                        {actor}
+                      </span>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </section>
 
-        {/* Reviews Section */}
-        <div className="glass rounded-lg p-8">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
-            <h2 className="text-2xl font-semibold">Reviews</h2>
+        <section className="mt-12 rounded-3xl border border-white/10 bg-slate-950/70 p-8 shadow-2xl lg:p-10">
+          <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-2xl font-semibold text-white">Reviews</h2>
+              <p className="text-sm text-slate-400">Hear what the community is saying about this title.</p>
+            </div>
             {user ? (
               <button
                 onClick={() => setShowReviewForm(!showReviewForm)}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                className="inline-flex items-center justify-center rounded-full bg-blue-600 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-blue-600/30 transition hover:-translate-y-0.5 hover:bg-blue-500"
               >
-                {showReviewForm ? 'Cancel' : 'Write Review'}
+                {showReviewForm ? 'Cancel' : 'Write a review'}
               </button>
             ) : (
               <Link
                 href="/login"
-                className="inline-flex items-center justify-center rounded-lg border border-blue-200 px-4 py-2 text-sm font-semibold text-blue-600 transition-colors hover:bg-blue-50"
+                className="inline-flex items-center justify-center rounded-full border border-white/15 px-5 py-2 text-sm font-semibold text-slate-200 transition hover:border-white/40 hover:text-white"
               >
                 Login to review
               </Link>
@@ -215,13 +265,16 @@ export default function MovieDetails() {
           </div>
 
           {showReviewForm && (
-            <form onSubmit={handleSubmitReview} className="mb-8 p-6 bg-gray-50 dark:bg-gray-800 rounded-lg">
-              <div className="mb-4">
-                <label className="block text-sm font-medium mb-2">Rating</label>
+            <form
+              onSubmit={handleSubmitReview}
+              className="mb-10 grid gap-6 rounded-2xl border border-white/10 bg-slate-900/60 p-6 shadow-inner"
+            >
+              <div className="grid gap-2 sm:grid-cols-[160px_1fr] sm:items-center">
+                <label className="text-sm font-medium text-slate-200">Rating</label>
                 <select
                   value={rating}
                   onChange={(e) => setRating(Number(e.target.value))}
-                  className="px-3 py-2 border border-gray-300 rounded-lg"
+                  className="w-full rounded-xl border border-white/10 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400/40"
                 >
                   {[1, 2, 3, 4, 5].map((num) => (
                     <option key={num} value={num}>
@@ -231,59 +284,67 @@ export default function MovieDetails() {
                 </select>
               </div>
 
-              <div className="mb-4">
-                <label className="block text-sm font-medium mb-2">Comment</label>
+              <div className="grid gap-2">
+                <label className="text-sm font-medium text-slate-200">Comment</label>
                 <textarea
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                  rows={4}
-                  placeholder="Write your review..."
+                  className="min-h-[120px] w-full rounded-xl border border-white/10 bg-slate-950/70 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-400 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400/40"
+                  placeholder="Share your thoughts about the story, visuals, or performances..."
                   required
                 />
               </div>
 
-              <button
-                type="submit"
-                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
-              >
-                Submit Review
-              </button>
+              <div className="flex justify-end">
+                <button
+                  type="submit"
+                  className="inline-flex items-center justify-center rounded-full bg-emerald-500 px-6 py-2 text-sm font-semibold text-white shadow-lg shadow-emerald-500/30 transition hover:-translate-y-0.5 hover:bg-emerald-400"
+                >
+                  Submit review
+                </button>
+              </div>
             </form>
           )}
 
           {reviewsLoading ? (
-            <div className="text-center">Loading reviews...</div>
+            <div className="flex min-h-[160px] items-center justify-center text-slate-300">
+              Loading reviews...
+            </div>
           ) : reviews.length === 0 ? (
-            <div className="text-center text-gray-500">No reviews yet. Be the first to review!</div>
+            <div className="flex min-h-[160px] items-center justify-center rounded-2xl border border-dashed border-white/10 bg-slate-900/40 text-sm text-slate-400">
+              No reviews yet. Be the first to share your take!
+            </div>
           ) : (
-            <div className="space-y-6">
+            <div className="grid gap-6">
               {reviews.map((review) => (
-                <div key={review._id} className="border-b border-gray-200 pb-6 last:border-b-0">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center space-x-2">
-                      <span className="font-semibold">{review.user.name}</span>
-                      <div className="flex">
+                <div
+                  key={review._id}
+                  className="rounded-2xl border border-white/10 bg-slate-900/50 p-6 shadow-lg shadow-black/20"
+                >
+                  <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-semibold text-white">{review.user.name}</span>
+                      <div className="flex items-center gap-1">
                         {[...Array(5)].map((_, i) => (
                           <span
                             key={i}
-                            className={`text-lg ${i < review.rating ? 'text-yellow-400' : 'text-gray-300'}`}
+                            className={`text-base ${i < review.rating ? 'text-amber-400' : 'text-slate-600'}`}
                           >
                             ★
                           </span>
                         ))}
                       </div>
                     </div>
-                    <span className="text-sm text-gray-500">
+                    <span className="text-xs uppercase tracking-wide text-slate-400">
                       {new Date(review.createdAt).toLocaleDateString()}
                     </span>
                   </div>
-                  <p className="text-gray-700">{review.comment}</p>
+                  <p className="text-sm leading-relaxed text-slate-200">{review.comment}</p>
                 </div>
               ))}
             </div>
           )}
-        </div>
+        </section>
       </main>
     </div>
   );

@@ -3,15 +3,14 @@ import dbConnect from '@/lib/mongoose';
 import Review from '@/models/Review';
 import { getUserFromRequest } from '@/lib/auth';
 
-interface Params {
-  params: {
-    id: string;
-  };
+interface RouteContext {
+  params: Promise<{ id: string }>;
 }
 
-export async function DELETE(request: NextRequest, { params }: Params) {
+export async function DELETE(request: NextRequest, { params }: RouteContext) {
   try {
     await dbConnect();
+    const { id } = await params;
 
     const user = getUserFromRequest(request);
     if (!user) {
@@ -21,7 +20,7 @@ export async function DELETE(request: NextRequest, { params }: Params) {
       );
     }
 
-    const review = await Review.findById(params.id);
+  const review = await Review.findById(id);
 
     if (!review) {
       return NextResponse.json(
@@ -38,7 +37,7 @@ export async function DELETE(request: NextRequest, { params }: Params) {
       );
     }
 
-    await Review.findByIdAndDelete(params.id);
+    await Review.findByIdAndDelete(id);
 
     return NextResponse.json({ message: 'Review deleted successfully' });
   } catch (error) {

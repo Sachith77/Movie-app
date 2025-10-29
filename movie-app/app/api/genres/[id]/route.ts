@@ -2,16 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongoose';
 import Genre from '@/models/Genre';
 
-interface Params {
-  params: {
-    id: string;
-  };
+interface RouteContext {
+  params: Promise<{ id: string }>;
 }
 
-export async function PUT(request: NextRequest, { params }: Params) {
+export async function PUT(request: NextRequest, { params }: RouteContext) {
   try {
     await dbConnect();
     const { name } = await request.json();
+    const { id } = await params;
 
     if (!name) {
       return NextResponse.json(
@@ -21,7 +20,7 @@ export async function PUT(request: NextRequest, { params }: Params) {
     }
 
     const genre = await Genre.findByIdAndUpdate(
-      params.id,
+      id,
       { name },
       { new: true, runValidators: true }
     );
@@ -55,11 +54,12 @@ export async function PUT(request: NextRequest, { params }: Params) {
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: Params) {
+export async function DELETE(request: NextRequest, { params }: RouteContext) {
   try {
     await dbConnect();
+    const { id } = await params;
 
-    const genre = await Genre.findByIdAndDelete(params.id);
+    const genre = await Genre.findByIdAndDelete(id);
 
     if (!genre) {
       return NextResponse.json(
