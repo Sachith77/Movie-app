@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Types, type FilterQuery } from 'mongoose';
 import dbConnect from '@/lib/mongoose';
 import Movie, { type IMovie } from '@/models/Movie';
+import Review from '@/models/Review';
 import { getUserFromRequest } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
@@ -34,8 +35,26 @@ export async function GET(request: NextRequest) {
 
     const total = await Movie.countDocuments(query);
 
+    // Get review counts for all movies
+    const movieIds = movies.map(movie => movie._id);
+    const reviewCounts = await Review.aggregate([
+      { $match: { movie: { $in: movieIds } } },
+      { $group: { _id: '$movie', count: { $sum: 1 } } }
+    ]);
+
+    // Create a map of movie ID to review count
+    const reviewCountMap = new Map(
+      reviewCounts.map(item => [item._id.toString(), item.count])
+    );
+
+    // Add review counts to movies
+    const moviesWithReviews = movies.map(movie => ({
+      ...movie.toObject(),
+      reviewsCount: reviewCountMap.get(movie._id.toString()) || 0
+    }));
+
     return NextResponse.json({
-      movies,
+      movies: moviesWithReviews,
       pagination: {
         page,
         limit,
